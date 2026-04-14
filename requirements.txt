@@ -1,0 +1,5 @@
+ollama
+faster-whisper
+edge-tts
+SpeechRecognition
+PyAudio
