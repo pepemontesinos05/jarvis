@@ -8,15 +8,9 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
+from config.settings import TIMEZONE, GOOGLE_CREDENTIALS_PATH as CREDENTIALS_PATH, GOOGLE_TOKEN_PATH as TOKEN_PATH
+
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-SECRETS_DIR = BASE_DIR / "config" / "secrets"
-CREDENTIALS_PATH = SECRETS_DIR / "google_credentials.json"
-TOKEN_PATH = SECRETS_DIR / "google_token.json"
-
-TIMEZONE = "Europe/Madrid"
-
 
 def get_calendar_service():
     """Devuelve un cliente autenticado de Google Calendar."""

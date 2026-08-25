@@ -31,6 +31,8 @@ def test_create():
 
     assert len(eventos_actuales) + 1 == len(eventos_nuevos)
 
+    delete_event(nuevo['id'])
+
 def test_update():
     """Comprobación de actualización"""
     inicio = ahora + timedelta(days=1)
@@ -47,3 +49,5 @@ def test_update():
     update_event(event_id, description = "Actualizacion del evento")
 
     assert get_event(event_id)['description'] == "Actualizacion del evento"
+
+    delete_event(nuevo['id'])
