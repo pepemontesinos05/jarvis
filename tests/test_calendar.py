@@ -1,17 +1,49 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from services.google_calendar import list_events
+from services.google_calendar import *
 
 tz = ZoneInfo("Europe/Madrid")
 ahora = datetime.now(tz)
-en_una_semana = ahora + timedelta(days=7)
 
-eventos = list_events(time_min=ahora, time_max=en_una_semana)
+def test_list():
+    """Comprobación de listado"""
+    en_una_semana = ahora + timedelta(days=7)
+    eventos = list_events(time_min=ahora, time_max=en_una_semana)
 
-print(f"Encontrados {len(eventos)} eventos en los próximos 7 días:\n")
+    assert len(eventos) == 1
 
-for evento in eventos:
-    titulo = evento.get("summary", "(sin título)")
-    inicio = evento["start"].get("dateTime", evento["start"].get("date"))
-    print(f"- {titulo} → {inicio}")
+def test_create():
+    """Comprobación de creación"""
+    inicio = ahora + timedelta(days=1)
+    fin = inicio + timedelta(hours=1)
+
+    en_una_semana = ahora + timedelta(days=7)
+    eventos_actuales = list_events(time_min=ahora, time_max=en_una_semana)
+
+    nuevo = create_event(
+        summary="Prueba tests",
+        start=inicio,
+        end=fin,
+        description="Evento de prueba creado desde el script de test",
+    )
+    eventos_nuevos = list_events(time_min=ahora, time_max=en_una_semana)
+
+    assert len(eventos_actuales) + 1 == len(eventos_nuevos)
+
+def test_update():
+    """Comprobación de actualización"""
+    inicio = ahora + timedelta(days=1)
+    fin = inicio + timedelta(hours=1)
+
+    nuevo = create_event(
+        summary="Prueba tests",
+        start=inicio,
+        end=fin,
+        description="Evento de prueba creado desde el script de test para actualizar",
+    )
+    event_id = nuevo['id']
+
+    update_event(event_id, description = "Actualizacion del evento")
+
+    assert get_event(event_id)['description'] == "Actualizacion del evento"
