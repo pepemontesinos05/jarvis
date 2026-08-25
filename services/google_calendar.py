@@ -33,7 +33,7 @@ def get_calendar_service():
     return build("calendar", "v3", credentials=creds)
 
 
-def _to_stand_format(dt: datetime) -> dict:
+def _to_stand_format(dt: datetime):
     """Convierte un datetime de Python al formato que espera la API de Google."""
     return {"dateTime": dt.isoformat(), "timeZone": TIMEZONE}
 
