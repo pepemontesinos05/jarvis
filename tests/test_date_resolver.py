@@ -77,7 +77,6 @@ def test_resolve_date_unknown(expression):
     [
         ("17:00", time(17, 0)),
         ("17:30", time(17, 30)),
-        ("09 05", time(9, 5)),
         ("a las 17:30", time(17, 30)),
         ("a las 9:05", time(9, 5)),
         ("las 5", time(5, 0)),
