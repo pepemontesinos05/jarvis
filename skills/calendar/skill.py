@@ -16,19 +16,14 @@ SEARCH_WINDOW_DAYS = 30  # rango donde buscar un evento existente por título
 def _is_valid_extraction(result: dict | None) -> bool:
     if result is None:
         return False
-
     action = result.get("action")
-    if action not in ("crear", "actualizar", "eliminar"):
+    if action not in ("crear", "actualizar", "eliminar", "listar"):
         return False
-
     if action in ("crear", "actualizar") and not result.get("date_expression") and not result.get("time"):
         return False
-
     if action == "crear" and not result.get("title"):
         return False
-
     return True
-
 
 def _combine_date_and_time(base_date: datetime, time_obj: dict | None, tz: ZoneInfo) -> datetime | None:
     """Combina la fecha resuelta con la hora resuelta en un único datetime con zona horaria.
@@ -45,18 +40,38 @@ def _combine_date_and_time(base_date: datetime, time_obj: dict | None, tz: ZoneI
 
     return datetime.combine(base_date.date(), resolved_time, tzinfo=tz)
 
+STOPWORDS = {"el", "la", "los", "las", "de", "del", "un", "una", "con", "y", "a", "en"}
+
+def _extract_keywords(text: str) -> set[str]:
+    """Convierte un título en un conjunto de palabras significativas (sin stopwords)."""
+    words = text.lower().split()
+    return {w for w in words if w not in STOPWORDS and len(w) > 2}
 
 def _find_event_by_title(title: str, now: datetime) -> list[dict]:
-    """Busca eventos cuyo título contenga 'title' (case-insensitive) en una
-    ventana de búsqueda razonable alrededor de 'now'.
-    """
+    """Busca eventos por substring exacto, o por coincidencia de palabras clave
+    significativas si el substring no encuentra nada."""
     window_start = now - timedelta(days=1)
     window_end = now + timedelta(days=SEARCH_WINDOW_DAYS)
 
     events = list_events(time_min=window_start, time_max=window_end, max_results=50)
 
     title_lower = title.lower()
-    return [e for e in events if title_lower in e.get("summary", "").lower()]
+    title_keywords = _extract_keywords(title)
+
+    matches = []
+    for event in events:
+        summary = event.get("summary", "")
+        summary_lower = summary.lower()
+
+        if title_lower in summary_lower:
+            matches.append(event)
+            continue
+
+        summary_keywords = _extract_keywords(summary)
+        if title_keywords and title_keywords & summary_keywords:
+            matches.append(event)
+
+    return matches
 
 
 class CalendarSkill(Skill):
@@ -89,6 +104,8 @@ class CalendarSkill(Skill):
             return self._handle_update(extraction, now, tz)
         if action == "eliminar":
             return self._handle_delete(extraction, now, tz)
+        if action == "listar":
+            return self._handle_list(extraction, now, tz)
 
         return SkillResult(success=False, message="No he sabido qué hacer con esa orden.")
 
@@ -165,3 +182,39 @@ class CalendarSkill(Skill):
 
         fecha_legible = new_start.strftime("%d/%m a las %H:%M")
         return SkillResult(success=True, message=f"Hecho, he movido '{title}' al {fecha_legible}.")
+
+    def _handle_list(self, extraction: dict, now: datetime, tz: ZoneInfo) -> SkillResult:
+        date_expression = extraction.get("date_expression")
+
+        if date_expression:
+            target_date = resolve_date(date_expression, now)
+        else:
+            target_date = None
+
+        if target_date is not None:
+            # Se pidió un día concreto: rango de ese día completo
+            window_start = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
+            window_end = window_start + timedelta(days=1)
+        else:
+            # No se reconoció fecha concreta (o pidieron "esta semana"/no dijeron nada):
+            # rango por defecto de los próximos 7 días
+            window_start = now
+            window_end = now + timedelta(days=7)
+
+        try:
+            events = list_events(time_min=window_start, time_max=window_end, max_results=20)
+        except Exception:
+            return SkillResult(success=False, message="Ha habido un problema al consultar tu calendario.")
+
+        if not events:
+            return SkillResult(success=True, message="No tienes ningún evento en ese periodo.", data={"events": []})
+
+        lineas = []
+        for event in events:
+            titulo = event.get("summary", "(sin título)")
+            inicio = event["start"].get("dateTime", event["start"].get("date"))
+            fecha_legible = datetime.fromisoformat(inicio).strftime("%d/%m a las %H:%M") if "T" in inicio else inicio
+            lineas.append(f"- {titulo} ({fecha_legible})")
+
+        mensaje = "Esto es lo que tienes:\n" + "\n".join(lineas)
+        return SkillResult(success=True, message=mensaje, data={"events": events})
