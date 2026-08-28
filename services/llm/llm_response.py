@@ -13,7 +13,7 @@ Reglas estrictas:
 
 Ejemplo 1:
 {{"accion": "crear", "resultado": "exito", "titulo": "dentista", "fecha": "2026-08-26", "hora": "17:00"}}
-Respuesta: Listo, tienes "dentista" agendado el 26/08 a las 17:00.
+Respuesta: Listo, tienes "dentista" agendado el 26 de agosto a las 17:00.
 
 Ejemplo 2:
 {{"accion": "eliminar", "resultado": "error", "motivo": "evento no encontrado", "titulo_buscado": "reunión"}}
@@ -21,10 +21,12 @@ Respuesta: No he encontrado ningún evento llamado "reunión".
 
 Ejemplo 3:
 {{"accion": "actualizar", "resultado": "exito", "titulo": "entreno", "nueva_fecha": "2026-08-27", "nueva_hora": "19:00"}}
-Respuesta: Hecho, "entreno" queda movido al 27/08 a las 19:00.
+Respuesta: Hecho, "entreno" queda movido al 27 de agosto a las 19:00.
 
 Información:
 {info}
+
+Respuesta:
 """
 
 def generate_response_text(info: dict, timeout: int = 10) -> str | None:

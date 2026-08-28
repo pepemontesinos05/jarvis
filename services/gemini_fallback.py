@@ -13,7 +13,10 @@ Lee esta orden en español y devuelve SOLO un JSON con esta forma exacta, sin te
 
 Reglas:
 - "title" debe conservar el nombre del evento tal como lo dice el usuario, con varias palabras si las usa.
-- "resolved_date" es la fecha YA CALCULADA a partir de la expresión temporal de la orden (ej: si hoy es {fecha_hoy} y dicen "el finde que viene", calcula tú mismo qué fecha exacta es el próximo sábado). Este es precisamente tu trabajo aquí: resolver expresiones de fecha complejas que un sistema más simple no pudo interpretar.
+- "resolved_date" es la fecha YA CALCULADA a partir de la expresión temporal de la orden (ej: si hoy es {fecha_hoy} y dicen "el finde que viene", 
+    calcula tú mismo qué fecha exacta es el próximo sábado). Este es precisamente tu trabajo aquí: resolver expresiones de fecha complejas que un sistema 
+    más simple no pudo interpretar. Si el usuario pide un evento para un día de la semana (ej: "el viernes") y coincide con el día de la semana de hoy, 
+    debes asumir SIEMPRE que se refiere a la próxima semana y sumar 7 días.
 - "time.hour" es la hora tal como se dice, SIN convertir tú mismo a formato 24h.
 - Si algún dato no aparece, su valor es null.
 
