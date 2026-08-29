@@ -34,6 +34,18 @@ def resolve_date(expression: str, now: datetime):
     match = re.search(r"(?:en|dentro de)\s+(\d+)\s+días?", expression)
     if match:
         return now + timedelta(days=int(match.group(1)))
+    
+    days = "|".join(WEEKDAYS)
+    match = (
+        re.search(rf"({days})\s+(?:que viene|próximo|siguiente)", expression)
+        or re.search(rf"próximo\s+({days})", expression)
+        or re.search(rf"({days})\s+de la semana que viene", expression)
+    )
+    if match:
+        day_founded = match.group(1)
+        index = WEEKDAYS.index(day_founded)
+        days_until = (len(WEEKDAYS) - 1 - now.weekday()) + (index + 1)
+        return now + timedelta(days=days_until)
 
     for index, weekday in enumerate(WEEKDAYS):
         if weekday in expression:
