@@ -97,7 +97,12 @@ def _find_event_by_title(title: str, now: datetime) -> list[dict]:
 
 def _build_message(fallback_message: str, info: dict) -> str:
     """Intenta generar una respuesta natural con el LLM local; si falla,
-    usa la plantilla fija para garantizar que siempre hay respuesta."""
+    usa la plantilla fija. Los mensajes de error NUNCA pasan por el LLM --
+    el riesgo de alucinación es mayor con menos datos concretos, y una
+    plantilla clara es preferible a una redacción 'natural' arriesgada."""
+    if info.get("resultado") == "error":
+        return fallback_message
+    
     natural = generate_response_text(info)
     return natural if natural else fallback_message
 
